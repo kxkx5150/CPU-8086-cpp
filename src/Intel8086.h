@@ -90,10 +90,11 @@ class Intel8086 {
     void run();
     void run_step(size_t steps, bool show_op);
 
+  private:
+    void tick(bool show_op);
+    bool cycle_opcode(int rep, bool show_op);
     bool exe_opcode(int rep, bool show_op);
 
-  private:
-    bool tick(bool show_op);
     bool msb(int w, int x);
     int  shift(int x, int n);
     int  signconv(int w, int x);
