@@ -91,7 +91,7 @@ class Intel8086 {
     void run_step(size_t steps, bool show_op);
 
   private:
-    void tick(bool show_op);
+    bool tick(bool show_op);
     bool cycle_opcode(int rep, bool show_op);
     bool exe_opcode(int rep, bool show_op);
 

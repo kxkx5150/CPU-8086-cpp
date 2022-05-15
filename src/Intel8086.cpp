@@ -69,11 +69,12 @@ void Intel8086::run_step(size_t steps, bool show_op)
     size_t i = 0;
     while (steps == 0 || steps != i) {
         i++;
-        tick(show_op);
+        if(!tick(show_op))
+            break;
     }
     printf("");
 }
-void Intel8086::tick(bool show_op)
+bool Intel8086::tick(bool show_op)
 {
     if (getFlag(TF)) {
         callInt(1);
@@ -152,7 +153,7 @@ void Intel8086::tick(bool show_op)
             rep = 0;
             break;
     }
-    exe_opcode(rep, show_op);
+    return cycle_opcode(rep, show_op);
 }
 bool Intel8086::cycle_opcode(int rep, bool show_op)
 {
@@ -173,7 +174,8 @@ bool Intel8086::cycle_opcode(int rep, bool show_op)
         if (show_op)
             show_info(op);
 
-        exe_opcode(rep, show_op);
+        if (!exe_opcode(rep, show_op))
+            return false;
     } while (rep > 0);
     return true;
 }
@@ -696,10 +698,10 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
             clocks += 5;
             break;
             // Register/m_memory and Register
-            // case 0x20:    // and reg8/mem8,reg8
-            // case 0x21:    // and reg16/mem16,reg16
-            // case 0x22:    // and reg8,reg8/mem8
-            // case 0x23:    // and reg16,reg16/mem16
+        case 0x20:    // and reg8/mem8,reg8
+        case 0x21:    // and reg16/mem16,reg16
+        case 0x22:    // and reg8,reg8/mem8
+        case 0x23:    // and reg16,reg16/mem16
             decode();
             if (d == 0b0) {
                 dst = getRM(w, mod, rm);
@@ -1352,7 +1354,7 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                 case 0b001:    // ROR
                     for (int cnt = 0; cnt < src; ++cnt) {
                         tempCF = (dst & 0b1) == 0b1;
-                        dst    = static_cast<int>(static_cast<unsigned int>(dst) >> 1);
+                        dst >>= 1;
                         dst |= (tempCF ? 1 : 0) * SIGN[w];
                         dst &= MASK[w];
                     }
@@ -1379,7 +1381,7 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                     }
                     for (int cnt = 0; cnt < src; ++cnt) {
                         tempCF = (dst & 0b1) == 0b1;
-                        dst    = static_cast<int>(static_cast<unsigned int>(dst) >> 1);
+                        dst >>= 1;
                         dst |= (getFlag(CF) ? 1 : 0) * SIGN[w];
                         dst &= MASK[w];
                         setFlag(CF, tempCF);
@@ -1406,7 +1408,7 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                     }
                     for (int cnt = 0; cnt < src; ++cnt) {
                         setFlag(CF, (dst & 0b1) == 0b1);
-                        dst = static_cast<int>(static_cast<unsigned int>(dst) >> 1);
+                        dst >>= 1;
                         dst &= MASK[w];
                     }
                     if (src > 0) {
@@ -1486,10 +1488,9 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                         clocks += mod == 0b11 ? (77 - 70) / 2 : (83 - 76) / 2;
                     } else {
                         dst            = getReg(W, AX);
-                        long long lres = static_cast<long long>(dst) * static_cast<long long>(src) & 0xffffffff;
-                        setReg(W, AX, static_cast<int>(lres));
-                        setReg(W, DX,
-                               static_cast<int>(static_cast<long long>(static_cast<unsigned long long>(lres) >> 16)));
+                        const long lres = (long) dst * (long) src & 0xffffffff;
+                        setReg(W, AX, (int) lres);
+                        setReg(W, DX, (int) (lres >> 16));
                         if (getReg(W, DX) > 0) {
                             setFlag(CF, true);
                             setFlag(OF, true);
@@ -1519,11 +1520,10 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                         src            = signconv(W, src);
                         dst            = ah << 8 | al;
                         dst            = signconv(W, dst);
-                        long long lres = static_cast<long long>(dst) * static_cast<long long>(src) & 0xffffffff;
-                        setReg(W, AX, static_cast<int>(lres));
-                        setReg(W, DX,
-                               static_cast<int>(static_cast<long long>(static_cast<unsigned long long>(lres) >> 16)));
-                        int dx = getReg(W, DX);
+                        const long lres = (long) dst * (long) src & 0xffffffff;
+                        setReg(W, AX, (int) lres);
+                        setReg(W, DX, (int) (lres >> 16));
+                        const int dx = getReg(W, DX);
                         if (dx > 0x0000 && dx < 0xffff) {
                             setFlag(CF, true);
                             setFlag(OF, true);
@@ -1548,14 +1548,14 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                         }
                         clocks += mod == 0b11 ? (90 - 80) / 2 : (96 - 86) / 2;
                     } else {
-                        long long ldst = static_cast<long long>(getReg(W, DX)) << 16 | getReg(W, AX);
+                        const long ldst = (long) getReg(W, DX) << 16 | getReg(W, AX);
                         long long lres = ldst / src & 0xffffffff;
                         if (lres > 0xffff) {
                             callInt(0);
                         } else {
-                            setReg(W, AX, static_cast<int>(lres));
+                            setReg(W, AX, (int) lres);
                             lres = ldst % src & 0xffff;
-                            setReg(W, DX, static_cast<int>(lres));
+                            setReg(W, DX, (int) lres);
                         }
                         clocks += mod == 0b11 ? (162 - 144) / 2 : (168 - 150) / 2;
                     }
@@ -1577,16 +1577,16 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                         clocks += mod == 0b11 ? (112 - 101) / 2 : (118 - 107) / 2;
                     } else {
                         src            = signconv(W, src);
-                        long long ldst = static_cast<long long>(getReg(W, DX)) << 16 | getReg(W, AX);
+                        long ldst = (long) getReg(W, DX) << 16 | getReg(W, AX);
                         // Do sign conversion manually.
                         ldst           = ldst << 32 >> 32;
                         long long lres = ldst / src & 0xffffffff;
                         if (lres > 0x00007fff || lres < 0xffff8000) {
                             callInt(0);
                         } else {
-                            setReg(W, AX, static_cast<int>(lres));
+                            setReg(W, AX, (int) lres);
                             lres = ldst % src & 0xffff;
-                            setReg(W, DX, static_cast<int>(lres));
+                            setReg(W, DX, (int) lres);
                         }
                         clocks += mod == 0b11 ? (184 - 165) / 2 : (190 - 171) / 2;
                     }
@@ -1733,8 +1733,8 @@ int Intel8086::dec(int w, int dst)
 }
 void Intel8086::decode()
 {
-    mod = static_cast<int>(static_cast<unsigned int>(queue[1]) >> 6) & 0b11;
-    reg = static_cast<int>(static_cast<unsigned int>(queue[1]) >> 3) & 0b111;
+    mod = queue[1] >> 6 & 0b11;
+    reg = queue[1] >> 3 & 0b111;
     rm  = queue[1] & 0b111;
     if (mod == 0b01) {
         ip = ip + 2 & 0xffff;
@@ -1905,7 +1905,7 @@ void Intel8086::setMem(int w, int addr, int val)
         if ((addr & 0b1) == 0b1) {
             clocks += 4;
         }
-        m_memory[addr + 1] = static_cast<int>(static_cast<unsigned int>(val) >> 8) & 0xff;
+        m_memory[addr + 1] = val >> 8 & 0xff;
     }
 }
 void Intel8086::setReg(int w, int reg, int val)
@@ -1941,19 +1941,19 @@ void Intel8086::setReg(int w, int reg, int val)
         switch (reg) {
             case 0b000:
                 al = val & 0xff;
-                ah = static_cast<int>(static_cast<unsigned int>(val) >> 8) & 0xff;
+                ah = val >> 8 & 0xff;
                 break;
             case 0b001:
                 cl = val & 0xff;
-                ch = static_cast<int>(static_cast<unsigned int>(val) >> 8) & 0xff;
+                ch = val >> 8 & 0xff;
                 break;
             case 0b010:
                 dl = val & 0xff;
-                dh = static_cast<int>(static_cast<unsigned int>(val) >> 8) & 0xff;
+                dh = val >> 8 & 0xff;
                 break;
             case 0b011:
                 bl = val & 0xff;
-                bh = static_cast<int>(static_cast<unsigned int>(val) >> 8) & 0xff;
+                bh = val >> 8 & 0xff;
                 break;
             case 0b100:
                 sp = val & 0xffff;
