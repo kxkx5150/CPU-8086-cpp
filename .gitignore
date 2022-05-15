@@ -1,0 +1,14 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.idx
+*.log
+.idea/
+.cache/
+build/
+exe/
