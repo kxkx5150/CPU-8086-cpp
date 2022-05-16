@@ -1577,7 +1577,7 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                         clocks += mod == 0b11 ? (112 - 101) / 2 : (118 - 107) / 2;
                     } else {
                         src            = signconv(W, src);
-                        long ldst = (long) getReg(W, DX) << 16 | getReg(W, AX);
+                        long long ldst = (long) getReg(W, DX) << 16 | getReg(W, AX);
                         // Do sign conversion manually.
                         ldst           = ldst << 32 >> 32;
                         long long lres = ldst / src & 0xffffffff;

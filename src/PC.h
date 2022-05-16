@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <vector>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 class Intel8086;
 class Intel8255;
@@ -9,7 +10,8 @@ class Motorola6845;
 
 class PC {
   private:
-    Intel8086    *m_cpu = nullptr;
+    Intel8086 *m_cpu = nullptr;
+    TTF_Font  *font  = nullptr;
 
     std::vector<uint16_t> MAPPING = {
         0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x000a, 0x000b, 0x000c, 0x000d,
@@ -44,5 +46,5 @@ class PC {
     void reset();
     void run_cpu();
 
-    void paint(SDL_Renderer * render, int widht, int height);
+    void paint(SDL_Renderer *render, int widht, int height);
 };

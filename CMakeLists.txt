@@ -11,4 +11,4 @@ add_executable(${PROJECT_NAME} ${sourcefiles}
 )
 
 find_package(OpenGL)
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} SDL2_image SDL2 SDL2main)
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} SDL2_image SDL2_ttf SDL2 SDL2main)

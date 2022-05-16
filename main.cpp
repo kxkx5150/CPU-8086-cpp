@@ -14,6 +14,7 @@ int main(int ArgCount, char **Args)
     clock_t beginFrame = clock();
     size_t  frames     = 0;
 
+	// SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *window =
         SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);    
     SDL_Renderer * render = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
