@@ -8,8 +8,6 @@ class Intel8086;
 class Intel8255;
 class Motorola6845;
 
-
-
 class PC {
   private:
     Intel8086 *m_cpu = nullptr;

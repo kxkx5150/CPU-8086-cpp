@@ -12,22 +12,17 @@ class Intel8253;
 class Intel8255;
 class Motorola6845;
 
-
 class Intel8086 {
   public:
-    uint8_t     m_memory[0x100000]{};
-
-    // std::vector<int>          m_memory = std::vector<int>(0x100000);
-    Intel8237                *m_dma    = nullptr;
-    Intel8259                *m_pic    = nullptr;
-    Intel8253                *m_pit    = nullptr;
-    Intel8255                *m_ppi    = nullptr;
-    Motorola6845             *m_crtc   = nullptr;
+    uint8_t                   m_memory[0x100000]{};
+    Intel8237                *m_dma  = nullptr;
+    Intel8259                *m_pic  = nullptr;
+    Intel8253                *m_pit  = nullptr;
+    Intel8255                *m_ppi  = nullptr;
+    Motorola6845             *m_crtc = nullptr;
     std::vector<Peripheral *> m_peripherals;
 
   private:
-
-
     int ah = 0, al = 0;
     int bh = 0, bl = 0;
     int ch = 0, cl = 0;

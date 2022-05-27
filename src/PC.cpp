@@ -64,7 +64,7 @@ void PC::paint(SDL_Renderer *renderer, int widht, int height)
 
     for (int y = 0; y < 25; ++y) {
         for (int x = 0; x < 80; ++x) {
-            const uint8_t character = m_cpu->m_memory[0xb8000 + 2 * (x + y * 80)];
+            const uint8_t  character = m_cpu->m_memory[0xb8000 + 2 * (x + y * 80)];
             const uint16_t attribute = m_cpu->m_memory[0xb8000 + 2 * (x + y * 80) + 1];
 
             // --- bg
@@ -79,10 +79,10 @@ void PC::paint(SDL_Renderer *renderer, int widht, int height)
 
             // --- font
             if (32 < character && character < 127 && character != 85) {
-            // if (character != 0 && character != 32) {
+                // if (character != 0 && character != 32) {
                 // printf("%s", character);
-                auto fntcolor = COLORS[attribute & 0b1111];
-                SDL_Color color={fntcolor[0],fntcolor[1],fntcolor[2]};
+                auto      fntcolor = COLORS[attribute & 0b1111];
+                SDL_Color color    = {fntcolor[0], fntcolor[1], fntcolor[2]};
 
                 SDL_Rect r0;
                 r0.x = 0;
@@ -96,16 +96,15 @@ void PC::paint(SDL_Renderer *renderer, int widht, int height)
                 r1.w = 7;
                 r1.h = 12;
 
-                const uint16_t chr = MAPPING[character];
-                SDL_Surface *text_surface = TTF_RenderUNICODE_Solid(font, &chr, color);
-                SDL_Texture *Message      = SDL_CreateTextureFromSurface(renderer, text_surface);
+                const uint16_t chr          = MAPPING[character];
+                SDL_Surface   *text_surface = TTF_RenderUNICODE_Solid(font, &chr, color);
+                SDL_Texture   *Message      = SDL_CreateTextureFromSurface(renderer, text_surface);
 
                 SDL_RenderCopy(renderer, Message, &r0, &r1);
                 SDL_FreeSurface(text_surface);
                 SDL_DestroyTexture(Message);
             }
         }
-
     }
     SDL_RenderPresent(renderer);
 }
