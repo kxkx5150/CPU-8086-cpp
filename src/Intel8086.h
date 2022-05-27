@@ -12,9 +12,12 @@ class Intel8253;
 class Intel8255;
 class Motorola6845;
 
+
 class Intel8086 {
   public:
-    std::vector<int>          m_memory = std::vector<int>(0x100000);
+    uint8_t     m_memory[0x100000]{};
+
+    // std::vector<int>          m_memory = std::vector<int>(0x100000);
     Intel8237                *m_dma    = nullptr;
     Intel8259                *m_pic    = nullptr;
     Intel8253                *m_pit    = nullptr;
@@ -23,39 +26,13 @@ class Intel8086 {
     std::vector<Peripheral *> m_peripherals;
 
   private:
-    const int CF = 1;
-    const int PF = 1 << 2;
-    const int AF = 1 << 4;
-    const int ZF = 1 << 6;
-    const int SF = 1 << 7;
-    const int TF = 1 << 8;
-    const int IF = 1 << 9;
-    const int DF = 1 << 10;
-    const int OF = 1 << 11;
-    const int B  = 0b0;
-    const int W  = 0b1;
-    const int AX = 0b000;
-    const int CX = 0b001;
-    const int DX = 0b010;
-    const int BX = 0b011;
 
-    std::vector<int> BITS = std::vector<int>{8, 16};
-    std::vector<int> SIGN = std::vector<int>{0x80, 0x8000};
-
-    const std::vector<int> MASK   = {0xff, 0xffff};
-    const std::vector<int> PARITY = {
-        1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1,
-        0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0,
-        0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0,
-        1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1,
-        0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1,
-        0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1,
-        1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1};
 
     int ah = 0, al = 0;
+    int bh = 0, bl = 0;
     int ch = 0, cl = 0;
     int dh = 0, dl = 0;
-    int bh = 0, bl = 0;
+
     int sp    = 0;
     int bp    = 0;
     int si    = 0;
@@ -78,6 +55,8 @@ class Intel8086 {
     int       rm     = 0;
     int       ea     = 0;
     long long clocks = 0;
+
+    long long cycles = 0;
 
   public:
     Intel8086();

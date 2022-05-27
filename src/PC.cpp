@@ -4,9 +4,14 @@
 #include "Motorola6845.h"
 #include <cstdio>
 
+std::vector<std::vector<uint8_t>> COLORS = {{0, 0, 0},     {0, 0, 170},    {0, 170, 0},    {0, 170, 170},
+                                            {170, 0, 0},   {170, 0, 170},  {170, 85, 0},   {170, 170, 170},
+                                            {85, 85, 85},  {85, 85, 255},  {85, 255, 85},  {85, 255, 255},
+                                            {255, 85, 85}, {255, 85, 255}, {255, 255, 85}, {255, 255, 255}};
+
 PC::PC()
 {
-    m_cpu = new Intel8086();    
+    m_cpu = new Intel8086();
     m_cpu->init();
 
     TTF_Init();
@@ -28,7 +33,7 @@ void PC::run_cpu()
 {
     m_cpu->run();
 }
-void PC::paint(SDL_Renderer *render, int widht , int height)
+void PC::paint(SDL_Renderer *render, int widht, int height)
 {
     SDL_RenderSetScale(render, 1, 1);
     const int curAttr = m_cpu->m_crtc->getRegister(0xa) >> 4;
@@ -36,52 +41,37 @@ void PC::paint(SDL_Renderer *render, int widht , int height)
 
     for (int y = 0; y < 25; ++y) {
         for (int x = 0; x < 80; ++x) {
-            const int character = m_cpu->m_memory[0xb8000 + 2 * (x + y * 80)];
-            const int attribute = m_cpu->m_memory[0xb8000 + 2 * (x + y * 80) + 1];
-            
-            // int coloridx = attribute >> 4 & 0b111;
-            // auto gbcolor = COLORS[coloridx];
-            // SDL_SetRenderDrawColor(render, gbcolor[0], gbcolor[1], gbcolor[2], SDL_ALPHA_OPAQUE);
-            // SDL_Rect rect;
-            // rect.x = x *7;
-            // rect.y = y *12;
-            // rect.w = 7;
-            // rect.h = 12;
-            // SDL_RenderDrawRect(render, &rect);
+            const uint16_t character = m_cpu->m_memory[0xb8000 + 2 * (x + y * 80)];
+            const uint16_t attribute = m_cpu->m_memory[0xb8000 + 2 * (x + y * 80) + 1];
 
-
-
+            auto gbcolor = COLORS[attribute >> 4 & 0b111];
+            SDL_SetRenderDrawColor(render, gbcolor[0], gbcolor[1], gbcolor[2], SDL_ALPHA_OPAQUE);
+            SDL_Rect rect;
+            rect.x = x * 7;
+            rect.y = y * 12;
+            rect.w = 7;
+            rect.h = 12;
+            SDL_RenderFillRect(render, &rect);
 
             // font
-            // char chr = MAPPING[character];
-            // if (chr != 0){
-            //     printf("");
-            // }
-            // char chr = MAPPING[character];
-            // SDL_Color White = {0, 200, 255};
-            // SDL_Surface* surfaceMessage = TTF_RenderText_Solid(font, " ", White); 
-            // SDL_Texture* Message = SDL_CreateTextureFromSurface(render, surfaceMessage);
-            // SDL_Rect rect; //create a rect
-            // rect.x = x *7;
-            // rect.y = y *12;
-            // rect.w = 7;
-            // rect.h = 12;
-            // SDL_RenderCopy(render, Message, NULL, &rect);
-            // SDL_FreeSurface(surfaceMessage);
+            if (32 < character && character < 127 && character != 85) {
+                // printf("%c\n", character);
+            }
+            // auto fntcolor  = COLORS[attribute & 0b1111];
+            // SDL_Color color={fntcolor[0],fntcolor[1],fntcolor[2]};
+            // SDL_Surface* text_surface = TTF_RenderUNICODE_Solid(font, &chr, color);
+            // SDL_Texture* Message = SDL_CreateTextureFromSurface(render, text_surface);
+            // SDL_Rect rectfg;
+            // rectfg.x = x *7;
+            // rectfg.y = y *12;
+            // rectfg.w = 7;
+            // rectfg.h = 12;
+            // SDL_RenderCopy(render, Message, NULL, &rectfg);
+            // SDL_FreeSurface(text_surface);
             // SDL_DestroyTexture(Message);
-
-            // if (x + y * 80 == curLoc && (curAttr & 0b1) == 0b0 && clock() % 1000 < 500){
-
-            // }else {
-            
-            // }
-            //     g.drawString("_", x * 7, y * 12 + 9);
-            // else
-            //     g.drawString("" + mapping[character], x * 7, y * 12 + 9);
         }
     }
 
     // SDL_RenderClear(render);
     SDL_RenderPresent(render);
-
 }

@@ -10,6 +10,35 @@
 
 using namespace std;
 
+const int CF = 1;
+const int PF = 1 << 2;
+const int AF = 1 << 4;
+const int ZF = 1 << 6;
+const int SF = 1 << 7;
+const int TF = 1 << 8;
+const int IF = 1 << 9;
+const int DF = 1 << 10;
+const int OF = 1 << 11;
+const int B  = 0b0;
+const int W  = 0b1;
+const int AX = 0b000;
+const int CX = 0b001;
+const int DX = 0b010;
+const int BX = 0b011;
+
+std::vector<int> BITS = std::vector<int>{8, 16};
+std::vector<int> SIGN = std::vector<int>{0x80, 0x8000};
+
+const std::vector<int> MASK   = {0xff, 0xffff};
+const std::vector<int> PARITY = {
+    1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1,
+    0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0,
+    0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0,
+    1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1,
+    0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1,
+    0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1,
+    1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1};
+
 Intel8086::Intel8086()
 {
     m_dma         = new Intel8237();
@@ -69,7 +98,7 @@ void Intel8086::run_step(size_t steps, bool show_op)
     size_t i = 0;
     while (steps == 0 || steps != i) {
         i++;
-        if(!tick(show_op))
+        if (!tick(show_op))
             break;
     }
     printf("");
@@ -173,6 +202,11 @@ bool Intel8086::cycle_opcode(int rep, bool show_op)
         ea = -1;
         if (show_op)
             show_info(op);
+
+        cycles++;
+        if (cycles == 1220000) {
+            printf("");
+        }
 
         if (!exe_opcode(rep, show_op))
             return false;
@@ -1487,10 +1521,10 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                         }
                         clocks += mod == 0b11 ? (77 - 70) / 2 : (83 - 76) / 2;
                     } else {
-                        dst            = getReg(W, AX);
-                        const long lres = (long) dst * (long) src & 0xffffffff;
-                        setReg(W, AX, (int) lres);
-                        setReg(W, DX, (int) (lres >> 16));
+                        dst             = getReg(W, AX);
+                        const long lres = (long)dst * (long)src & 0xffffffff;
+                        setReg(W, AX, (int)lres);
+                        setReg(W, DX, (int)(lres >> 16));
                         if (getReg(W, DX) > 0) {
                             setFlag(CF, true);
                             setFlag(OF, true);
@@ -1517,12 +1551,12 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                         }
                         clocks += mod == 0b11 ? (98 - 80) / 2 : (154 - 128) / 2;
                     } else {
-                        src            = signconv(W, src);
-                        dst            = ah << 8 | al;
-                        dst            = signconv(W, dst);
-                        const long lres = (long) dst * (long) src & 0xffffffff;
-                        setReg(W, AX, (int) lres);
-                        setReg(W, DX, (int) (lres >> 16));
+                        src             = signconv(W, src);
+                        dst             = ah << 8 | al;
+                        dst             = signconv(W, dst);
+                        const long lres = (long)dst * (long)src & 0xffffffff;
+                        setReg(W, AX, (int)lres);
+                        setReg(W, DX, (int)(lres >> 16));
                         const int dx = getReg(W, DX);
                         if (dx > 0x0000 && dx < 0xffff) {
                             setFlag(CF, true);
@@ -1548,14 +1582,14 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                         }
                         clocks += mod == 0b11 ? (90 - 80) / 2 : (96 - 86) / 2;
                     } else {
-                        const long ldst = (long) getReg(W, DX) << 16 | getReg(W, AX);
-                        long long lres = ldst / src & 0xffffffff;
+                        const long ldst = (long)getReg(W, DX) << 16 | getReg(W, AX);
+                        long long  lres = ldst / src & 0xffffffff;
                         if (lres > 0xffff) {
                             callInt(0);
                         } else {
-                            setReg(W, AX, (int) lres);
+                            setReg(W, AX, (int)lres);
                             lres = ldst % src & 0xffff;
-                            setReg(W, DX, (int) lres);
+                            setReg(W, DX, (int)lres);
                         }
                         clocks += mod == 0b11 ? (162 - 144) / 2 : (168 - 150) / 2;
                     }
@@ -1577,16 +1611,16 @@ bool Intel8086::exe_opcode(int rep, bool show_op)
                         clocks += mod == 0b11 ? (112 - 101) / 2 : (118 - 107) / 2;
                     } else {
                         src            = signconv(W, src);
-                        long long ldst = (long) getReg(W, DX) << 16 | getReg(W, AX);
+                        long long ldst = (long)getReg(W, DX) << 16 | getReg(W, AX);
                         // Do sign conversion manually.
                         ldst           = ldst << 32 >> 32;
                         long long lres = ldst / src & 0xffffffff;
                         if (lres > 0x00007fff || lres < 0xffff8000) {
                             callInt(0);
                         } else {
-                            setReg(W, AX, (int) lres);
+                            setReg(W, AX, (int)lres);
                             lres = ldst % src & 0xffff;
-                            setReg(W, DX, (int) lres);
+                            setReg(W, DX, (int)lres);
                         }
                         clocks += mod == 0b11 ? (184 - 165) / 2 : (190 - 171) / 2;
                     }
@@ -2056,697 +2090,697 @@ void Intel8086::show_info(int op)
 {
     switch (op) {
         case 0x88: {
-            printf("MOV REG8/MEM8,REG8\n");
+            printf("mov reg8/mem8,reg8\n");
         } break;
         case 0x89: {
-            printf("MOV REG16/MEM16,REG16\n");
+            printf("mov reg16/mem16,reg16\n");
         } break;
         case 0x8a: {
-            printf("MOV REG8,REG8/MEM8\n");
+            printf("mov reg8,reg8/mem8\n");
         } break;
         case 0x8b: {
-            printf("MOV REG16,REG16/MEM16\n");
+            printf("mov reg16,reg16/mem16\n");
         } break;
         case 0xc6: {
-            printf("MOV REG8/MEM8,IMMED8\n");
+            printf("mov reg8/mem8,immed8\n");
         } break;
         case 0xc7: {
-            printf("MOV REG16/MEM16,IMMED16\n");
+            printf("mov reg16/mem16,immed16\n");
         } break;
         case 0xb0: {
-            printf("MOV AL,IMMED8\n");
+            printf("mov al,immed8\n");
         } break;
         case 0xb1: {
-            printf("MOV CL,IMMED8\n");
+            printf("mov cl,immed8\n");
         } break;
         case 0xb2: {
-            printf("MOV DL,IMMED8\n");
+            printf("mov dl,immed8\n");
         } break;
         case 0xb3: {
-            printf("MOV BL,IMMED8\n");
+            printf("mov bl,immed8\n");
         } break;
         case 0xb4: {
-            printf("MOV AH,IMMED8\n");
+            printf("mov ah,immed8\n");
         } break;
         case 0xb5: {
-            printf("MOV CH,IMMED8\n");
+            printf("mov ch,immed8\n");
         } break;
         case 0xb6: {
-            printf("MOV DH,IMMED8\n");
+            printf("mov dh,immed8\n");
         } break;
         case 0xb7: {
-            printf("MOV BH,IMMED8\n");
+            printf("mov bh,immed8\n");
         } break;
         case 0xb8: {
-            printf("MOV AX,IMMED16\n");
+            printf("mov ax,immed16\n");
         } break;
         case 0xb9: {
-            printf("MOV CX,IMMED16\n");
+            printf("mov cx,immed16\n");
         } break;
         case 0xba: {
-            printf("MOV DX,IMMED16\n");
+            printf("mov dx,immed16\n");
         } break;
         case 0xbb: {
-            printf("MOV BX,IMMED16\n");
+            printf("mov bx,immed16\n");
         } break;
         case 0xbc: {
-            printf("MOV SP,IMMED16\n");
+            printf("mov sp,immed16\n");
         } break;
         case 0xbd: {
-            printf("MOV BP,IMMED16\n");
+            printf("mov bp,immed16\n");
         } break;
         case 0xbe: {
-            printf("MOV SI,IMMED16\n");
+            printf("mov si,immed16\n");
         } break;
         case 0xbf: {
-            printf("MOV DI,IMMED16\n");
+            printf("mov di,immed16\n");
         } break;
         case 0xa0: {
-            printf("MOV AL,MEM8\n");
+            printf("mov al,mem8\n");
         } break;
         case 0xa1: {
-            printf("MOV AX,MEM16\n");
+            printf("mov ax,mem16\n");
         } break;
         case 0xa2: {
-            printf("MOV MEM8,AL\n");
+            printf("mov mem8,al\n");
         } break;
         case 0xa3: {
-            printf("MOV MEM16,AX\n");
+            printf("mov mem16,ax\n");
         } break;
         case 0x8c: {
-            printf("MOV REG16/MEM16,SEGREG\n");
+            printf("mov reg16/mem16,segreg\n");
         } break;
         case 0x8e: {
-            printf("MOV SEGREG,REG16/MEM16\n");
+            printf("mov segreg,reg16/mem16\n");
         } break;
         case 0x50: {
-            printf("PUSH AX\n");
+            printf("push ax\n");
         } break;
         case 0x51: {
-            printf("PUSH CX\n");
+            printf("push cx\n");
         } break;
         case 0x52: {
-            printf("PUSH DX\n");
+            printf("push dx\n");
         } break;
         case 0x53: {
-            printf("PUSH BX\n");
+            printf("push bx\n");
         } break;
         case 0x54: {
-            printf("PUSH SP\n");
+            printf("push sp\n");
         } break;
         case 0x55: {
-            printf("PUSH BP\n");
+            printf("push bp\n");
         } break;
         case 0x56: {
-            printf("PUSH SI\n");
+            printf("push si\n");
         } break;
         case 0x57: {
-            printf("PUSH DI\n");
+            printf("push di\n");
         } break;
         case 0x06: {
-            printf("PUSH ES\n");
+            printf("push es\n");
         } break;
         case 0x0e: {
-            printf("PUSH CS\n");
+            printf("push cs\n");
         } break;
         case 0x16: {
-            printf("PUSH SS\n");
+            printf("push ss\n");
         } break;
         case 0x1e: {
-            printf("PUSH DS\n");
+            printf("push ds\n");
         } break;
         case 0x58: {
-            printf("POP AX\n");
+            printf("pop ax\n");
         } break;
         case 0x59: {
-            printf("POP CX\n");
+            printf("pop cx\n");
         } break;
         case 0x5a: {
-            printf("POP DX\n");
+            printf("pop dx\n");
         } break;
         case 0x5b: {
-            printf("POP BX\n");
+            printf("pop bx\n");
         } break;
         case 0x5c: {
-            printf("POP SP\n");
+            printf("pop sp\n");
         } break;
         case 0x5d: {
-            printf("POP BP\n");
+            printf("pop bp\n");
         } break;
         case 0x5e: {
-            printf("POP SI\n");
+            printf("pop si\n");
         } break;
         case 0x5f: {
-            printf("POP DI\n");
+            printf("pop di\n");
         } break;
         case 0x07: {
-            printf("POP ES\n");
+            printf("pop es\n");
         } break;
         case 0x0f: {
-            printf("POP CS\n");
+            printf("pop cs\n");
         } break;
         case 0x17: {
-            printf("POP SS\n");
+            printf("pop ss\n");
         } break;
         case 0x1f: {
-            printf("POP DS\n");
+            printf("pop ds\n");
         } break;
         case 0x86: {
-            printf("XCHG REG8,REG8/MEM8\n");
+            printf("xchg reg8,reg8/mem8\n");
         } break;
         case 0x87: {
-            printf("XCHG REG16,REG16/MEM16\n");
+            printf("xchg reg16,reg16/mem16\n");
         } break;
         case 0x91: {
-            printf("XCHG AX,CX\n");
+            printf("xchg ax,cx\n");
         } break;
         case 0x92: {
-            printf("XCHG AX,DX\n");
+            printf("xchg ax,dx\n");
         } break;
         case 0x93: {
-            printf("XCHG AX,BX\n");
+            printf("xchg ax,bx\n");
         } break;
         case 0x94: {
-            printf("XCHG AX,SP\n");
+            printf("xchg ax,sp\n");
         } break;
         case 0x95: {
-            printf("XCHG AX,BP\n");
+            printf("xchg ax,bp\n");
         } break;
         case 0x96: {
-            printf("XCHG AX,SI\n");
+            printf("xchg ax,si\n");
         } break;
         case 0x97: {
-            printf("XCHG AX,DI\n");
+            printf("xchg ax,di\n");
         } break;
         case 0xd7: {
-            printf("XLAT SOURCE-TABLE\n");
+            printf("xlat source-table\n");
         } break;
         case 0xe4: {
-            printf("IN AL,IMMED8\n");
+            printf("in al,immed8\n");
         } break;
         case 0xe5: {
-            printf("IN AX,IMMED8\n");
+            printf("in ax,immed8\n");
         } break;
         case 0xec: {
-            printf("IN AL,DX\n");
+            printf("in al,dx\n");
         } break;
         case 0xed: {
-            printf("IN AX,DX\n");
+            printf("in ax,dx\n");
         } break;
         case 0xe6: {
-            printf("OUT AL,IMMED8\n");
+            printf("out al,immed8\n");
         } break;
         case 0xe7: {
-            printf("OUT AX,IMMED8\n");
+            printf("out ax,immed8\n");
         } break;
         case 0xee: {
-            printf("OUT AL,DX\n");
+            printf("out al,dx\n");
         } break;
         case 0xef: {
-            printf("OUT AX,DX\n");
+            printf("out ax,dx\n");
         } break;
         case 0x8d: {
-            printf("LEA REG16,MEM16\n");
+            printf("lea reg16,mem16\n");
         } break;
         case 0xc5: {
-            printf("LDS REG16,MEM32\n");
+            printf("lds reg16,mem32\n");
         } break;
         case 0xc4: {
-            printf("LES REG16,MEM32\n");
+            printf("les reg16,mem32\n");
         } break;
         case 0x9f: {
-            printf("LAHF\n");
+            printf("lahf\n");
         } break;
         case 0x9e: {
-            printf("SAHF\n");
+            printf("sahf\n");
         } break;
         case 0x9c: {
-            printf("PUSHF\n");
+            printf("pushf\n");
         } break;
         case 0x9d: {
-            printf("POPF\n");
+            printf("popf\n");
         } break;
         case 0x00: {
-            printf("ADD REG8/MEM8,REG8\n");
+            printf("add reg8/mem8,reg8\n");
         } break;
         case 0x01: {
-            printf("ADD REG16/MEM16,REG16\n");
+            printf("add reg16/mem16,reg16\n");
         } break;
         case 0x02: {
-            printf("ADD REG8,REG8/MEM8\n");
+            printf("add reg8,reg8/mem8\n");
         } break;
         case 0x03: {
-            printf("ADD REG16,REG16/MEM16\n");
+            printf("add reg16,reg16/mem16\n");
         } break;
         case 0x04: {
-            printf("ADD AL,IMMED8\n");
+            printf("add al,immed8\n");
         } break;
         case 0x05: {
-            printf("ADD AX,IMMED16\n");
+            printf("add ax,immed16\n");
         } break;
         case 0x10: {
-            printf("ADC REG8/MEM8,REG8\n");
+            printf("adc reg8/mem8,reg8\n");
         } break;
         case 0x11: {
-            printf("ADC REG16/MEM16,REG16\n");
+            printf("adc reg16/mem16,reg16\n");
         } break;
         case 0x12: {
-            printf("ADC REG8,REG8/MEM8\n");
+            printf("adc reg8,reg8/mem8\n");
         } break;
         case 0x13: {
-            printf("ADC REG16,REG16/MEM16\n");
+            printf("adc reg16,reg16/mem16\n");
         } break;
         case 0x14: {
-            printf("ADC AL,IMMED8\n");
+            printf("adc al,immed8\n");
         } break;
-        case 0X15: {
-            printf("ADC AX,IMMED16\n");
+        case 0x15: {
+            printf("adc ax,immed16\n");
         } break;
         case 0x40: {
-            printf("INC AX\n");
+            printf("inc ax\n");
         } break;
         case 0x41: {
-            printf("INC CX\n");
+            printf("inc cx\n");
         } break;
         case 0x42: {
-            printf("INC DX\n");
+            printf("inc dx\n");
         } break;
         case 0x43: {
-            printf("INC BX\n");
+            printf("inc bx\n");
         } break;
         case 0x44: {
-            printf("INC SP\n");
+            printf("inc sp\n");
         } break;
         case 0x45: {
-            printf("INC BP\n");
+            printf("inc bp\n");
         } break;
         case 0x46: {
-            printf("INC SI\n");
+            printf("inc si\n");
         } break;
         case 0x47: {
-            printf("INC DI\n");
+            printf("inc di\n");
         } break;
         case 0x37: {
-            printf("AAA\n");
+            printf("aaa\n");
         } break;
         case 0x27: {
-            printf("DAA\n");
+            printf("daa\n");
         } break;
         case 0x28: {
-            printf("SUB REG8/MEM8,REG8\n");
+            printf("sub reg8/mem8,reg8\n");
         } break;
         case 0x29: {
-            printf("SUB REG16/MEM16,REG16\n");
+            printf("sub reg16/mem16,reg16\n");
         } break;
         case 0x2a: {
-            printf("SUB REG8,REG8/MEM8\n");
+            printf("sub reg8,reg8/mem8\n");
         } break;
         case 0x2b: {
-            printf("SUB REG16,REG16/MEM16\n");
+            printf("sub reg16,reg16/mem16\n");
         } break;
         case 0x2c: {
-            printf("SUB AL,IMMED8\n");
+            printf("sub al,immed8\n");
         } break;
         case 0x2d: {
-            printf("SUB AX,IMMED16\n");
+            printf("sub ax,immed16\n");
         } break;
         case 0x18: {
-            printf("SBB REG8/MEM8,REG8\n");
+            printf("sbb reg8/mem8,reg8\n");
         } break;
         case 0x19: {
-            printf("SBB REG16/MEM16,REG16\n");
+            printf("sbb reg16/mem16,reg16\n");
         } break;
         case 0x1a: {
-            printf("SBB REG8,REG8/MEM8\n");
+            printf("sbb reg8,reg8/mem8\n");
         } break;
         case 0x1b: {
-            printf("SBB REG16,REG16/MEM16\n");
+            printf("sbb reg16,reg16/mem16\n");
         } break;
         case 0x1c: {
-            printf("SBB AL,IMMED8\n");
+            printf("sbb al,immed8\n");
         } break;
-        case 0X1d: {
-            printf("SBB AX,IMMED16\n");
+        case 0x1d: {
+            printf("sbb ax,immed16\n");
         } break;
         case 0x48: {
-            printf("DEC AX\n");
+            printf("dec ax\n");
         } break;
         case 0x49: {
-            printf("DEC CX\n");
+            printf("dec cx\n");
         } break;
         case 0x4a: {
-            printf("DEC DX\n");
+            printf("dec dx\n");
         } break;
         case 0x4b: {
-            printf("DEC BX\n");
+            printf("dec bx\n");
         } break;
         case 0x4c: {
-            printf("DEC SP\n");
+            printf("dec sp\n");
         } break;
         case 0x4d: {
-            printf("DEC BP\n");
+            printf("dec bp\n");
         } break;
         case 0x4e: {
-            printf("DEC SI\n");
+            printf("dec si\n");
         } break;
         case 0x4f: {
-            printf("DEC DI\n");
+            printf("dec di\n");
         } break;
         case 0x38: {
-            printf("CMP REG8/MEM8,REG8\n");
+            printf("cmp reg8/mem8,reg8\n");
         } break;
         case 0x39: {
-            printf("CMP REG16/MEM16,REG16\n");
+            printf("cmp reg16/mem16,reg16\n");
         } break;
         case 0x3a: {
-            printf("CMP REG8,REG8/MEM8\n");
+            printf("cmp reg8,reg8/mem8\n");
         } break;
         case 0x3b: {
-            printf("CMP REG16,REG16/MEM16\n");
+            printf("cmp reg16,reg16/mem16\n");
         } break;
         case 0x3c: {
-            printf("CMP AL,IMMED8\n");
+            printf("cmp al,immed8\n");
         } break;
         case 0x3d: {
-            printf("CMP AX,IMMED16\n");
+            printf("cmp ax,immed16\n");
         } break;
         case 0x3f: {
-            printf("AAS\n");
+            printf("aas\n");
         } break;
         case 0x2f: {
-            printf("DAS\n");
+            printf("das\n");
         } break;
         case 0xd4: {
-            printf("AAM\n");
+            printf("aam\n");
         } break;
         case 0xd5: {
-            printf("AAD\n");
+            printf("aad\n");
         } break;
         case 0x98: {
-            printf("CBW\n");
+            printf("cbw\n");
         } break;
         case 0x99: {
-            printf("CWD\n");
+            printf("cwd\n");
         } break;
         case 0x20: {
-            printf("AND REG8/MEM8,REG8\n");
+            printf("and reg8/mem8,reg8\n");
         } break;
         case 0x21: {
-            printf("AND REG16/MEM16,REG16\n");
+            printf("and reg16/mem16,reg16\n");
         } break;
         case 0x22: {
-            printf("AND REG8,REG8/MEM8\n");
+            printf("and reg8,reg8/mem8\n");
         } break;
         case 0x23: {
-            printf("AND REG16,REG16/MEM16\n");
+            printf("and reg16,reg16/mem16\n");
         } break;
         case 0x24: {
-            printf("AND AL,IMMED8\n");
+            printf("and al,immed8\n");
         } break;
         case 0x25: {
-            printf("AND AX,IMMED16\n");
+            printf("and ax,immed16\n");
         } break;
         case 0x08: {
-            printf("OR REG8/MEM8,REG8\n");
+            printf("or reg8/mem8,reg8\n");
         } break;
         case 0x09: {
-            printf("OR REG16/MEM16,REG16\n");
+            printf("or reg16/mem16,reg16\n");
         } break;
         case 0x0a: {
-            printf("OR REG8,REG8/MEM8\n");
+            printf("or reg8,reg8/mem8\n");
         } break;
         case 0x0b: {
-            printf("OR REG16,REG16/MEM16\n");
+            printf("or reg16,reg16/mem16\n");
         } break;
         case 0x0c: {
-            printf("OR AL,IMMED8\n");
+            printf("or al,immed8\n");
         } break;
         case 0x0d: {
-            printf("OR AX,IMMED16\n");
+            printf("or ax,immed16\n");
         } break;
         case 0x30: {
-            printf("XOR REG8/MEM8,REG8\n");
+            printf("xor reg8/mem8,reg8\n");
         } break;
         case 0x31: {
-            printf("XOR REG16/MEM16,REG16\n");
+            printf("xor reg16/mem16,reg16\n");
         } break;
         case 0x32: {
-            printf("XOR REG8,REG8/MEM8\n");
+            printf("xor reg8,reg8/mem8\n");
         } break;
         case 0x33: {
-            printf("XOR REG16,REG16/MEM16\n");
+            printf("xor reg16,reg16/mem16\n");
         } break;
         case 0x34: {
-            printf("XOR AL,IMMED8\n");
+            printf("xor al,immed8\n");
         } break;
         case 0x35: {
-            printf("XOR AX,IMMED16\n");
+            printf("xor ax,immed16\n");
         } break;
         case 0x84: {
-            printf("TEST REG8/MEM8,REG8\n");
+            printf("test reg8/mem8,reg8\n");
         } break;
         case 0x85: {
-            printf("TEST REG16/MEM16,REG16\n");
+            printf("test reg16/mem16,reg16\n");
         } break;
         case 0xa8: {
-            printf("TEST AL,IMMED8\n");
+            printf("test al,immed8\n");
         } break;
         case 0xa9: {
-            printf("TEST AX,IMMED16\n");
+            printf("test ax,immed16\n");
         } break;
         case 0xa4: {
-            printf("MOVS DEST-STR8,SRC-STR8\n");
+            printf("movs dest-str8,src-str8\n");
         } break;
         case 0xa5: {
-            printf("MOVS DEST-STR16,SRC-STR16\n");
+            printf("movs dest-str16,src-str16\n");
         } break;
         case 0xa6: {
-            printf("CMPS DEST-STR8,SRC-STR8\n");
+            printf("cmps dest-str8,src-str8\n");
         } break;
         case 0xa7: {
-            printf("CMPS DEST-STR16,SRC-STR16\n");
+            printf("cmps dest-str16,src-str16\n");
         } break;
         case 0xae: {
-            printf("SCAS DEST-STR8\n");
+            printf("scas dest-str8\n");
         } break;
         case 0xaf: {
-            printf("SCAS DEST-STR16\n");
+            printf("scas dest-str16\n");
         } break;
         case 0xac: {
-            printf("LODS SRC-STR8\n");
+            printf("lods src-str8\n");
         } break;
         case 0xad: {
-            printf("LODS SRC-STR16\n");
+            printf("lods src-str16\n");
         } break;
         case 0xaa: {
-            printf("STOS DEST-STR8\n");
+            printf("stos dest-str8\n");
         } break;
         case 0xab: {
-            printf("STOS DEST-STR16\n");
+            printf("stos dest-str16\n");
         } break;
         case 0xe8: {
-            printf("CALL NEAR-PROC\n");
+            printf("call near-proc\n");
         } break;
         case 0x9a: {
-            printf("CALL FAR-PROC\n");
+            printf("call far-proc\n");
         } break;
         case 0xc3: {
-            printf("RET (intrasegment)\n");
+            printf("ret (intrasegment)\n");
         } break;
         case 0xc2: {
-            printf("RET IMMED16 (intraseg)\n");
+            printf("ret immed16 (intraseg)\n");
         } break;
         case 0xcb: {
-            printf("RET (intersegment)\n");
+            printf("ret (intersegment)\n");
         } break;
         case 0xca: {
-            printf("RET IMMED16 (intersegment)\n");
+            printf("ret immed16 (intersegment)\n");
         } break;
         case 0xe9: {
-            printf("JMP NEAR-LABEL\n");
+            printf("jmp near-label\n");
         } break;
         case 0xeb: {
-            printf("JMP SHORT-LABEL\n");
+            printf("jmp short-label\n");
         } break;
         case 0xea: {
-            printf("JMP FAR-LABEL\n");
+            printf("jmp far-label\n");
         } break;
         case 0x70: {
-            printf("JO SHORT-LABEL\n");
+            printf("jo short-label\n");
         } break;
         case 0x71: {
-            printf("JNO SHORT-LABEL\n");
+            printf("jno short-label\n");
         } break;
         case 0x72: {
-            printf("JB/JNAE/JC SHORT-LABEL\n");
+            printf("jb/jnae/jc short-label\n");
         } break;
         case 0x73: {
-            printf("JNB/JAE/JNC SHORT-LABEL\n");
+            printf("jnb/jae/jnc short-label\n");
         } break;
         case 0x74: {
-            printf("JE/JZ SHORT-LABEL\n");
+            printf("je/jz short-label\n");
         } break;
         case 0x75: {
-            printf("JNE/JNZ SHORT-LABEL\n");
+            printf("jne/jnz short-label\n");
         } break;
         case 0x76: {
-            printf("JBE/JNA SHORT-LABEL\n");
+            printf("jbe/jna short-label\n");
         } break;
         case 0x77: {
-            printf("JNBE/JA SHORT-LABEL\n");
+            printf("jnbe/ja short-label\n");
         } break;
         case 0x78: {
-            printf("JS SHORT-LABEL\n");
+            printf("js short-label\n");
         } break;
         case 0x79: {
-            printf("JNS SHORT-LABEL\n");
+            printf("jns short-label\n");
         } break;
         case 0x7a: {
-            printf("JP/JPE SHORT-LABEL\n");
+            printf("jp/jpe short-label\n");
         } break;
         case 0x7b: {
-            printf("JNP/JPO SHORT-LABEL\n");
+            printf("jnp/jpo short-label\n");
         } break;
         case 0x7c: {
-            printf("JL/JNGE SHORT-LABEL\n");
+            printf("jl/jnge short-label\n");
         } break;
         case 0x7d: {
-            printf("JNL/JGE SHORT-LABEL\n");
+            printf("jnl/jge short-label\n");
         } break;
         case 0x7e: {
-            printf("JLE/JNG SHORT-LABEL\n");
+            printf("jle/jng short-label\n");
         } break;
         case 0x7f: {
-            printf("JNLE/JG SHORT-LABEL\n");
+            printf("jnle/jg short-label\n");
         } break;
         case 0xe2: {
-            printf("LOOP SHORT-LABEL\n");
+            printf("loop short-label\n");
         } break;
         case 0xe1: {
-            printf("LOOPE/LOOPZ SHORT-LABEL\n");
+            printf("loope/loopz short-label\n");
         } break;
         case 0xe0: {
-            printf("LOOPNE/LOOPNZ SHORT-LABEL\n");
+            printf("loopne/loopnz short-label\n");
         } break;
         case 0xe3: {
-            printf("JCXZ SHORT-LABEL\n");
+            printf("jcxz short-label\n");
         } break;
         case 0xcc: {
-            printf("INT 3\n");
+            printf("int 3\n");
         } break;
         case 0xcd: {
-            printf("INT IMMED8\n");
+            printf("int immed8\n");
         } break;
         case 0xce: {
-            printf("INTO\n");
+            printf("into\n");
         } break;
         case 0xcf: {
-            printf("IRET\n");
+            printf("iret\n");
         } break;
         case 0xf8: {
-            printf("CLC\n");
+            printf("clc\n");
         } break;
         case 0xf5: {
-            printf("CMC\n");
+            printf("cmc\n");
         } break;
         case 0xf9: {
-            printf("STC\n");
+            printf("stc\n");
         } break;
         case 0xfc: {
-            printf("CLD\n");
+            printf("cld\n");
         } break;
         case 0xfd: {
-            printf("STD\n");
+            printf("std\n");
         } break;
         case 0xfa: {
-            printf("CLI\n");
+            printf("cli\n");
         } break;
         case 0xfb: {
-            printf("STI\n");
+            printf("sti\n");
         } break;
         case 0xf4: {
-            printf("HLT\n");
+            printf("hlt\n");
         } break;
         case 0x9b: {
-            printf("WAIT\n");
+            printf("wait\n");
         } break;
         case 0xd8: {
-            printf("ESC 0,SOURCE\n");
+            printf("esc 0,source\n");
         } break;
         case 0xd9: {
-            printf("ESC 1,SOURCE\n");
+            printf("esc 1,source\n");
         } break;
         case 0xda: {
-            printf("ESC 2,SOURCE\n");
+            printf("esc 2,source\n");
         } break;
         case 0xdb: {
-            printf("ESC 3,SOURCE\n");
+            printf("esc 3,source\n");
         } break;
         case 0xdc: {
-            printf("ESC 4,SOURCE\n");
+            printf("esc 4,source\n");
         } break;
         case 0xdd: {
-            printf("ESC 5,SOURCE\n");
+            printf("esc 5,source\n");
         } break;
         case 0xde: {
-            printf("ESC 6,SOURCE\n");
+            printf("esc 6,source\n");
         } break;
         case 0xdf: {
-            printf("ESC 7,SOURCE\n");
+            printf("esc 7,source\n");
         } break;
         case 0xf0: {
-            printf("LOCK\n");
+            printf("lock\n");
         } break;
         case 0x90: {
-            printf("NOP\n");
+            printf("nop\n");
         } break;
         // case 0x80:
         // case 0x81:
         // case 0x82:
         // case 0x83:
-        //     //case 0b000: // ADD
-        //     //case 0b001: // OR
-        //     //case 0b010: // ADC
-        //     //case 0b011: // SBB
-        //     //case 0b100: // AND
-        //     //case 0b101: // SUB
-        //     //case 0b110: // XOR
-        //     //case 0b111: // CMP
-        // case 0x8f: // POP REG16/MEM16
-        //     //case 0b000: // POP
+        //     //case 0b000: // add
+        //     //case 0b001: // or
+        //     //case 0b010: // adc
+        //     //case 0b011: // sbb
+        //     //case 0b100: // and
+        //     //case 0b101: // sub
+        //     //case 0b110: // xor
+        //     //case 0b111: // cmp
+        // case 0x8f: // pop reg16/mem16
+        //     //case 0b000: // pop
         // case 0xd0:
         // case 0xd1:
         // case 0xd2:
         // case 0xd3:
-        //     //case 0b000: // ROL
-        //     //case 0b001: // ROR
-        //     //case 0b010: // RCL
-        //     //case 0b011: // RCR
-        //     //case 0b100: // SAL/SHL
-        //     //case 0b101: // SHR
-        //     //case 0b111: // SAR
+        //     //case 0b000: // rol
+        //     //case 0b001: // ror
+        //     //case 0b010: // rcl
+        //     //case 0b011: // rcr
+        //     //case 0b100: // sal/shl
+        //     //case 0b101: // shr
+        //     //case 0b111: // sar
         // case 0xf6:
         // case 0xf7:
-        //     //case 0b000: // TEST
-        //     //case 0b010: // NOT
-        //     //case 0b011: // NEG
-        //     //case 0b100: // MUL
-        //     //case 0b101: // IMUL
-        //     //case 0b110: // DIV
-        //     //case 0b111: // IDIV
+        //     //case 0b000: // test
+        //     //case 0b010: // not
+        //     //case 0b011: // neg
+        //     //case 0b100: // mul
+        //     //case 0b101: // imul
+        //     //case 0b110: // div
+        //     //case 0b111: // idiv
         // case 0xfe:
-        //     //case 0b000: // INC
-        //     //case 0b001: // DEC
+        //     //case 0b000: // inc
+        //     //case 0b001: // dec
         // case 0xff:
-        //     //case 0b000: // INC
-        //     //case 0b001: // DEC
-        //     //case 0b010: // CALL
-        //     //case 0b011: // CALL
-        //     //case 0b100: // JMP
-        //     //case 0b101: // JMP
-        //     //case 0b110: // PUSH
+        //     //case 0b000: // inc
+        //     //case 0b001: // dec
+        //     //case 0b010: // call
+        //     //case 0b011: // call
+        //     //case 0b100: // jmp
+        //     //case 0b101: // jmp
+        //     //case 0b110: // push
         default:
-            printf("NOP\n");
+            printf("nop\n");
             break;
     }
 }
