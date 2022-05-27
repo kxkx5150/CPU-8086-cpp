@@ -101,7 +101,6 @@ void Intel8086::run_step(size_t steps, bool show_op)
         if (!tick(show_op))
             break;
     }
-    printf("");
 }
 bool Intel8086::tick(bool show_op)
 {
@@ -204,10 +203,6 @@ bool Intel8086::cycle_opcode(int rep, bool show_op)
             show_info(op);
 
         cycles++;
-        if (cycles == 1220000) {
-            printf("");
-        }
-
         if (!exe_opcode(rep, show_op))
             return false;
     } while (rep > 0);

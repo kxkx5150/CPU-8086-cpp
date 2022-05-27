@@ -18,12 +18,14 @@ int main(int ArgCount, char **Args)
     SDL_Window *window =
         SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);    
     SDL_Renderer * render = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_RenderSetScale(render, 1, 1);
 
     for (int Running = 1; Running;) {
         pc->run_cpu();
         clock_t endFrame = clock();
         frames++;
-        if (endFrame - beginFrame > 1000.0 / 60) {
+        if (endFrame - beginFrame > 1000.0 / 10) {
+        // if (endFrame - beginFrame > 1000.0 / 60) {
             pc->paint(render, width, height);
             beginFrame = endFrame;
             frames     = 0;
