@@ -78,8 +78,7 @@ void PC::paint(SDL_Renderer *renderer, int widht, int height)
             SDL_RenderFillRect(renderer, &rect);
 
             // --- font
-            if (32 < character && character < 127 && character != 85) {
-                // if (character != 0 && character != 32) {
+            if (character != 0 && character != 32) {
                 // printf("%s", character);
                 auto      fntcolor = COLORS[attribute & 0b1111];
                 SDL_Color color    = {fntcolor[0], fntcolor[1], fntcolor[2]};
@@ -107,4 +106,5 @@ void PC::paint(SDL_Renderer *renderer, int widht, int height)
         }
     }
     SDL_RenderPresent(renderer);
+    SDL_Delay(10);
 }
