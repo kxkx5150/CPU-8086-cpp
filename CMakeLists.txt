@@ -3,9 +3,6 @@ project(cpp_app)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../exe")
 
-include_directories(./include)
-link_directories(./lib)
-
 file(GLOB sourcefiles "*.h" "*.cpp" "src/*.h" "src/*.cpp")
 add_executable(${PROJECT_NAME} ${sourcefiles}
 )

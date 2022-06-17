@@ -8,7 +8,7 @@
             "name": "(gdb) 起動",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/exe/cpp_app.exe",
+            "program": "${workspaceFolder}/exe/cpp_app",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -16,7 +16,7 @@
             "externalConsole": false,
             "MIMode": "gdb",
             "preLaunchTask": "CMake Build",
-            "miDebuggerPath": "C:/ghcup/msys64/mingw64/bin/gdb.exe",
+            "miDebuggerPath": "gdb",
             "setupCommands": [
                 {
                     "description": "gdb の再フォーマットを有効にする",

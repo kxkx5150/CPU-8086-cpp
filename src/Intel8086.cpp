@@ -1,7 +1,7 @@
 #include "Intel8086.h"
 #include <chrono>
-#include <corecrt.h>
-#include <crtdbg.h>
+// #include <corecrt.h>
+// #include <crtdbg.h>
 #include <cstddef>
 #include <cstdio>
 #include <fstream>
@@ -59,8 +59,8 @@ Intel8086::~Intel8086()
 void Intel8086::init()
 {
     reset();
-    load(0xfe000, "bin\\bios.bin");
-    load(0xf6000, "bin\\basic.bin");
+    load(0xfe000, "bin/bios.bin");
+    load(0xf6000, "bin/basic.bin");
 }
 void Intel8086::reset()
 {
