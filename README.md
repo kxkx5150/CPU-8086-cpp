@@ -4,6 +4,14 @@
 
 <br><br><br>
 
+install SDL2
+
+<pre>
+sudo apt-get install libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-net-dev libsdl2-ttf-dev
+</pre>
+
+<br><br><br>
+
 https://user-images.githubusercontent.com/10168979/170740958-f11a08ec-5843-4313-bf58-862f9a992454.mp4
 
 
