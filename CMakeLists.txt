@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(cpp_app)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../exe")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/exe)
 
 include_directories(./include)
 link_directories(./lib)
